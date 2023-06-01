@@ -14,6 +14,10 @@ const getArticleDog = (request, h) => {
     return h.response(article).code(200);
 };
 
+const getallArticleDog = (request, h) => {
+    return h.response(articlesDog).code(200);
+};
+
 const addArticleDog = (request, h) => {
     const { content } = request.payload;
     const newArticle = { idDog: articles.length + 1, content };
@@ -46,6 +50,11 @@ const deleteArticleDog = (request, h) => {
     return h.response(deletedArticle).code(200);
 };
 
+const deleteallArticleDog = (request, h) => {
+    articlesDog = [];
+    return h.response({ message: 'All articles deleted' }).code(200);
+};
+
 ////=============== Split Beetween Dog and Cat ===============////
 
 let articlesCat = [
@@ -62,6 +71,10 @@ const getArticleCat = (request, h) => {
     }
 
     return h.response(article).code(200);
+};
+
+const getallArticleCat = (request, h) => {
+    return h.response(articlesCat).code(200);
 };
 
 const addArticleCat = (request, h) => {
@@ -96,13 +109,23 @@ const deleteArticleCat = (request, h) => {
     return h.response(deletedArticle).code(200);
 };
 
+const deleteallArticleCat = (request, h) => {
+    articlesCat = [];
+    return h.response({ message: 'All articles deleted' }).code(200);
+};
+
 module.exports = {
-    getArticleCat,
+    getArticleDog,
+    getallArticleDog,
     addArticleDog,
     editArticleDog,
     deleteArticleDog,
-    getArticleDog,
+    deleteallArticleDog,
+
+    getArticleCat,
+    getallArticleCat,
     addArticleCat,
     editArticleCat,
-    deleteArticleCat
+    deleteArticleCat,
+    deleteallArticleCat 
 };
