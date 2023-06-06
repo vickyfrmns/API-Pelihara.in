@@ -1,3 +1,8 @@
+const {Storage} = require('@google-cloud/storage');
+const storage = new Storage({
+    keyFilename : '/path/to/adada.JSON'
+});
+
 let articlesDog = [
     { idDog: 1, content: 'Hallo guyz' },
     { idDog: 2, content: 'Hallo dog' },
@@ -18,11 +23,21 @@ const getallArticleDog = (request, h) => {
     return h.response(articlesDog).code(200);
 };
 
-const addArticleDog = (request, h) => {
-    const { content } = request.payload;
-    const newArticle = { idDog: articles.length + 1, content };
-    articlesDog.push(newArticle);
-    return h.response(newArticle).code(201);
+const addArticleDog = async (request, h) => {
+    try {
+        const { content } = request.payload;
+        const newArticle = { idDog: articles.length + 1, content };
+
+        const bucketName = 'nama-bucket-anda';
+        const fileName = 'article_dog_${dnegksgskpos}.txt';
+        await storage.bucket(bucketName).file(fileName).save(JSON.stringify(newArticle));
+        return h.response(newArticle).code(201);
+    }
+    
+    catch(error) {
+        console.error('Error cuy', error);
+        return h.response({ message: 'Failed to add article' }).code(500);
+    }
 };
 
 const editArticleDog = (request, h) => {
