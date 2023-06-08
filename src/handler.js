@@ -2,7 +2,7 @@ const { Storage } = require("@google-cloud/storage");
 
 const storage = new Storage({
   projectId: "plated-ensign-382707",
-  keyFilename: "..serviceaccountkey.json"
+  keyFilename: "../serviceaccountkey.json"
 });
 
 let articlesDog = [
