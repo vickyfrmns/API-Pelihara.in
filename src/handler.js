@@ -1,74 +1,97 @@
-const { Storage } = require("@google-cloud/storage");
+const admin = require('firebase-admin');
+const serviceAccount = require('../serviceaccountkey.json');
 
-const storage = new Storage({
-  projectId: "plated-ensign-382707",
-  keyFilename: "../serviceaccountkey.json"
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://console.firebase.google.com/project/plated-ensign-382707/firestore/rules'
 });
 
-let articlesDog = [
-  {
-    idDog: 1,
-    title: "Title/Trouble Bab 6.txt",
-    publisher: "Publisher/To-Do.txt",
-    content: "Content/Tuning Kecepatan Kanan.txt",
-    imageFile: "Untitled2",
-  },
-];
+const db = admin.firestore();
+const bucket = admin.storage().bucket('aboutpet-peliharain');
 
 const getArticleDog = async (request, h) => {
-  const id = parseInt(request.params.idDog);
-  const article = articlesDog.find((a) => a.idDog === id);
+  try {
+    const dogId = request.params.id;
 
-  if (!article) {
-    return h.response({ message: "Article not found" }).code(404);
+    const docRef = db.collection('Dog').doc(dogId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return h.response('File not found').code(404);
+    }
+
+    const dogData = doc.data();
+
+    const imageUrl = await getDownloadUrl(dogData.Image);
+
+    dogData.imageUrl = imageUrl;
+
+    return h.response(dogData);
+  } 
+  
+  catch (error) {
+    console.error(error);
+    return h.response('Eror').code(500);
   }
-
-  const { title, publisher, content, imageFile } = article;
-
-  const titleFile = storage.bucket("aboutpet-peliharain").file(title);
-  const [titleText] = await titleFile.download();
-
-  const publisherFile = storage.bucket("aboutpet-peliharain").file(publisher);
-  const [publisherText] = await publisherFile.download();
-
-  const contentFile = storage.bucket("aboutpet-peliharain").file(content);
-  const [contentText] = await contentFile.download();
-
-  const imageFileObj = storage.bucket("aboutpet-peliharain").file(imageFile);
-  const [imageUrl] = await imageFileObj.getSignedUrl({
-    action: "read",
-    expires: "12-12-2030",
-  });
-
-  return h
-    .response({
-      ...article,
-      title: titleText.toString(),
-      publisher: publisherText.toString(),
-      content: contentText.toString(),
-      imageUrl
-    })
-    .code(200);
 };
 
-const getallArticleDog = (request, h) => {
-  return h.response(articlesDog).code(200);
+const getallArticleDog = async (request, h) => {
+  try {
+    const snapshot = await db.collection('Dog').get();
+    const dogs = [];
+
+    snapshot.forEach(async (doc) => {
+      const dogData = doc.data();
+
+      const imageUrl = await getDownloadUrl(dogData.Image);
+
+      dogData.imageUrl = imageUrl;
+
+      dogs.push(dogData);
+    });
+    return h.response(dogs);
+  } 
+  
+  catch (error) 
+  {
+    console.error(error);
+    return h.response('Error retrieving dogs').code(500);
+  }
 };
 
 const addArticleDog = async (request, h) => {
   try {
-    const { content, title } = request.payload;
-    const newArticle = { idDog: articles.length + 1, title, content1 };
+    const { Publisher, Title, Content, Image } = request.payload;
 
-    const fileName = "article_dog_${dnegksgskpos}.txt";
-    await storage
-      .bucket(bucketName)
-      .file(fileName)
-      .save(JSON.stringify(newArticle));
-    return h.response(newArticle).code(201);
+    const dogId = db.collection('Dog').doc().id;
+
+    const imagePath = `Dog/${Image.hapi.filename}`;
+
+    const fileUploadStream = bucket.file(imagePath).createWriteStream({
+      metadata: {
+        contentType: Image.hapi.headers['content-type']
+      }
+    });
+
+    Image.pipe(fileUploadStream);
+
+    await new Promise((resolve, reject) => {
+      fileUploadStream.on('finish', resolve);
+      fileUploadStream.on('error', reject);
+    });
+
+    await db.collection('Dog').doc(dogId).set({
+      Publisher,
+      Title,
+      Content,
+      Image: imagePath
+    });
+
+    // Return the success response
+    return h.response({ message: 'Dog added successfully' }).code(201);
   } catch (error) {
-    console.error("Error cuy", error);
-    return h.response({ message: "Failed to add article" }).code(500);
+    console.error(error);
+    return h.response({ message: 'Error adding dog' }).code(500);
   }
 };
 
@@ -104,24 +127,54 @@ const deleteallArticleDog = (request, h) => {
 
 ////=============== Split Beetween Dog and Cat ===============////
 
-let articlesCat = [
-  { idCat: 1, content: "Oke Test" },
-  { idCat: 2, content: "Hallo cat" },
-];
+const getArticleCat = async (request, h) => {
+  try {
+    const catId = request.params.id;
 
-const getArticleCat = (request, h) => {
-  const id = parseInt(request.params.idCat);
-  const article = articlesCat.find((a) => a.idCat === id);
+    const docRef = db.collection('Cat').doc(catId);
+    const doc = await docRef.get();
 
-  if (!article) {
-    return h.response({ message: "Article not found" }).code(404);
+    if (!doc.exists) {
+      return h.response('File not found').code(404);
+    }
+
+    const catData = doc.data();
+
+    const imageUrl = await getDownloadUrl(catData.Image);
+
+    catData.imageUrl = imageUrl;
+
+    return h.response(catData);
+  } 
+  
+  catch (error) {
+    console.error(error);
+    return h.response('Eror').code(500);
   }
-
-  return h.response(article).code(200);
 };
 
-const getallArticleCat = (request, h) => {
-  return h.response(articlesCat).code(200);
+const getallArticleCat = async (request, h) => {
+  try {
+    const snapshot = await db.collection('Cat').get();
+    const cats = [];
+
+    snapshot.forEach(async (doc) => {
+      const catData = doc.data();
+
+      const imageUrl = await getDownloadUrl(catData.Image);
+
+      catData.imageUrl = imageUrl;
+
+      cats.push(catData);
+    });
+    return h.response(cats);
+  } 
+  
+  catch (error) 
+  {
+    console.error(error);
+    return h.response('Error retrieving dogs').code(500);
+  }
 };
 
 const addArticleCat = (request, h) => {
@@ -160,6 +213,50 @@ const deleteallArticleCat = (request, h) => {
   articlesCat = [];
   return h.response({ message: "All articles deleted" }).code(200);
 };
+
+const getDownloadUrl = async (filePath) => {
+  try {
+    const file = bucket.file(filePath);
+    const [url] = await file.getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500',
+    });
+    return url;
+  } catch (error) {
+    console.error('Error getting download URL:', error);
+    throw new Error('Failed to get download URL');
+  }
+};
+
+const UploadImage = async () => {
+  const file = request.payload.image;
+
+  if (!file) {
+    throw new Error('No file uploaded.');
+  }
+
+  const blob = storage.bucket(bucketName).file(`Dog/${file.hapi.filename}`);
+
+  // Buat writable stream dan unggah file ke Firebase Storage
+  const blobStream = blob.createWriteStream({
+    metadata: {
+      contentType: file.hapi.headers['content-type']
+    }
+  });
+
+  blobStream.on('error', (err) => {
+    console.error(err);
+    throw new Error('Error uploading file.');
+  });
+
+  blobStream.on('finish', () => {
+    return 'File uploaded successfully.';
+  });
+
+  file.pipe(blobStream);
+
+  return h.response(file.hapi.filename).code(200);
+}
 
 module.exports = {
   getArticleDog,

@@ -1,14 +1,27 @@
-const { getArticleCat, getArticleDog, addArticleDog, editArticleDog, deleteArticleDog, editArticleCat, deleteArticleCat, addArticleCat, getallArticleCat, deleteallArticleCat, getallArticleDog, deleteallArticleDog } = require("./handler");
+const { 
+    getArticleCat, 
+    getArticleDog, 
+    addArticleDog, 
+    editArticleDog,
+    deleteArticleDog,
+    editArticleCat, 
+    deleteArticleCat, 
+    addArticleCat, 
+    getallArticleCat, 
+    deleteallArticleCat, 
+    getallArticleDog, 
+    deleteallArticleDog 
+} = require("./handler");
 
 const routes = [
     {
         method : 'GET',
-        path : '/home/cat/{idCat}',
+        path : '/Cat/{id}',
         handler : getArticleCat,
     },
     {
         method : 'GET',
-        path : '/home/cat',
+        path : '/Cat',
         handler : getallArticleCat,
     },
     {
@@ -36,12 +49,12 @@ const routes = [
 
     {
         method : 'GET',
-        path : '/home/dog/{idDog}',
+        path : '/Dog/{id}',
         handler : getArticleDog,
     },
     {
         method : 'GET',
-        path : '/home/dog',
+        path : '/Dog',
         handler : getallArticleDog,
     },
     {
@@ -61,7 +74,7 @@ const routes = [
     },
     {
         method : 'POST',
-        path : '/home/dog',
+        path : '/Dog',
         handler : addArticleDog
     },
 ];
