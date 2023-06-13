@@ -4,11 +4,11 @@ const serviceAccount = require("../serviceaccountkey.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL:
-    "https://console.firebase.google.com/project/plated-ensign-382707/firestore/rules",
+    "https://console.firebase.google.com/project/pelihara-in-389202/firestore/rules",
 });
 
 const db = admin.firestore();
-const bucket = admin.storage().bucket("aboutpet-peliharain");
+const bucket = admin.storage().bucket("pelihara-in-389202.appspot.com");
 
 const getArticleDog = async (request, h) => {
   try {
@@ -52,6 +52,35 @@ const getallArticleDog = async (request, h) => {
   } catch (error) {
     console.error(error);
     return h.response("Artikel tidak dapat ditemukan").code(500);
+  }
+};
+
+const addArticleDog = async (request, h) => {
+  try {
+    const { payload } = request;
+    const { title, file, content, publisher, iddog } = payload;
+
+    const imageUrl = await uploadFileDog(file);
+
+    const dogData = {
+      Title: title,
+      Content: content,
+      Publisher: publisher,
+      idDog: iddog,
+      Image: imageUrl,
+    };
+
+    const docRef = await db.collection("Dog").add(dogData);
+    const dogId = docRef.id;
+
+    const addedDog = await docRef.get();
+    const dogDataWithId = addedDog.data();
+    dogDataWithId.id = dogId;
+
+    return h.response(dogDataWithId).code(201);
+  } catch (error) {
+    console.error(error);
+    return h.response("Error").code(500);
   }
 };
 
@@ -102,6 +131,37 @@ const getallArticleCat = async (request, h) => {
   }
 };
 
+const addArticleCat = async (request, h) => {
+  try {
+    const { payload } = request;
+    const { title, file, content, publisher, idcat } = payload;
+
+    const imageUrl = await uploadFileCat(file);
+
+    const catData = {
+      Title: title,
+      Content: content,
+      Publisher: publisher,
+      idCat: idcat,
+      Image: imageUrl,
+    };
+
+    const docRef = await db.collection("Cat").add(catData);
+    const catId = docRef.id;
+
+    const addedCat = await docRef.get();
+    const catDataWithId = addedCat.data();
+    catDataWithId.id = catId;
+
+    return h.response(catDataWithId).code(201);
+  } catch (error) {
+    console.error(error);
+    return h.response("Error").code(500);
+  }
+};
+
+////=============== Upload and Download Image ===============////
+
 const getDownloadUrl = async (filePath) => {
   try {
     const file = bucket.file(filePath);
@@ -116,9 +176,59 @@ const getDownloadUrl = async (filePath) => {
   }
 };
 
+const uploadFileCat = async (file) => {
+  const filePath = file.path;
+  const fileExt = path.extname(filePath);
+
+  const originalFileName = path.basename(file.path);
+
+  const fileName = `${originalFileName}${fileExt}`;
+
+  const options = {
+    destination: `Cat/${fileName}`,
+    public: true,
+    metadata: {
+      contentType: file.headers["content-type"],
+    },
+  };
+
+  await bucket.upload(filePath, options);
+
+  const imageUrl = `Cat/${fileName}`;
+  console.log("File uploaded successfully. Image URL:", imageUrl);
+
+  return imageUrl;
+};
+
+const uploadFileDog = async (file) => {
+  const filePath = file.path;
+  const fileExt = path.extname(filePath);
+
+  const originalFileName = path.basename(file.path);
+
+  const fileName = `${originalFileName}${fileExt}`;
+
+  const options = {
+    destination: `Dog/${fileName}`,
+    public: true,
+    metadata: {
+      contentType: file.headers["content-type"],
+    },
+  };
+
+  await bucket.upload(filePath, options);
+
+  const imageUrl = `Dog/${fileName}`;
+  console.log("File uploaded successfully. Image URL:", imageUrl);
+
+  return imageUrl;
+};
+
 module.exports = {
   getArticleDog,
   getallArticleDog,
+  addArticleDog,
   getArticleCat,
   getallArticleCat,
+  addArticleCat,
 };

@@ -1,6 +1,8 @@
 const {
   getArticleCat,
   getArticleDog,
+  addArticleCat,
+  addArticleDog,
   getallArticleCat,
   getallArticleDog,
 } = require("./handler");
@@ -16,6 +18,11 @@ const routes = [
     path: "/Cat",
     handler: getallArticleCat,
   },
+  {
+    method: "POST",
+    path: "/Cat",
+    handler: addArticleCat,
+  },
 
   ////// =========================  Split Between Cat and Dog Routes ==================== ///
 
@@ -28,6 +35,11 @@ const routes = [
     method: "GET",
     path: "/Dog",
     handler: getallArticleDog,
+  },
+  {
+    method: "POST",
+    path: "/Dog",
+    handler: addArticleDog,
   },
 ];
 
